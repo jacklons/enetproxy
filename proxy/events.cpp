@@ -109,7 +109,7 @@ bool events::out::generictext(std::string packet) {
             std::string username = chat.substr(6);
             auto& bruh = g_server->m_world.local;
             for (auto& player : g_server->m_world.players) {
-                string plyr = player.name.substr(2).substr(0, player.name.length() - 4);
+                std::string plyr = player.name.substr(2).substr(0, player.name.length() - 4);
                 if (plyr != bruh.name.substr(2).substr(0, player.name.length() - 4))
                 {
                     g_server->send(false, "action|input\n|text|/pull " + plyr);
