@@ -12,7 +12,8 @@ bool events::out::variantlist(gameupdatepacket_t* packet) {
     PRINTS("varlist: %s\n", varlist.print().c_str());
     return false;
 }
-
+bool fastdrop = false;
+bool fasttrash = false;
 bool events::out::pingreply(gameupdatepacket_t* packet) {
     //since this is a pointer we do not need to copy memory manually again
     packet->m_vec2_x = 1000.f;  //gravity
@@ -55,7 +56,8 @@ bool events::out::generictext(std::string packet) {
             g_server->send(true, va, world.local.netid, -1);
             gt::send_log("name set to: " + name);
             return true;
-        } else if (find_command(chat, "flag ")) {
+        }
+        else if (find_command(chat, "flag ")) {
             int flag = atoi(chat.substr(6).c_str());
             variantlist_t va{ "OnGuildDataChanged" };
             va[1] = 1;
@@ -65,26 +67,46 @@ bool events::out::generictext(std::string packet) {
             g_server->send(true, va, world.local.netid, -1);
             gt::send_log("flag set to item id: " + std::to_string(flag));
             return true;
-        } else if (find_command(chat, "ghost")) {
+        }
+        else if (find_command(chat, "ghost")) {
             gt::ghost = !gt::ghost;
             if (gt::ghost)
                 gt::send_log("Ghost is now enabled.");
             else
                 gt::send_log("Ghost is now disabled.");
             return true;
-        } else if (find_command(chat, "country ")) {
+        }
+        else if (find_command(chat, "fd")) {
+            fastdrop = !fastdrop;
+            if (fastdrop)
+                gt::send_log("Fast Drop is now enabled.");
+            else
+                gt::send_log("Fast Drop is now disabled.");
+            return true;
+        }
+        else if (find_command(chat, "ft")) {
+            fasttrash = !fasttrash;
+            if (fasttrash)
+                gt::send_log("Fast Trash is now enabled.");
+            else
+                gt::send_log("Fast Trash is now disabled.");
+            return true;
+        }
+        else if (find_command(chat, "country ")) {
             std::string cy = chat.substr(9);
             gt::flag = cy;
             gt::send_log("your country set to " + cy + ", (Relog to game to change it successfully!)");
             return true;
-        } else if (find_command(chat, "uid ")) {
+        }
+        else if (find_command(chat, "uid ")) {
             std::string name = chat.substr(5);
             gt::send_log("resolving uid for " + name);
             g_server->send(false, "action|input\n|text|/ignore /" + name);
             g_server->send(false, "action|friends");
             gt::resolving_uid2 = true;
             return true;
-        } else if (find_command(chat, "tp ")) {
+        }
+        else if (find_command(chat, "tp ")) {
             std::string name = chat.substr(4);
             std::transform(name.begin(), name.end(), name.begin(), ::tolower);
             for (auto& player : g_server->m_world.players) {
@@ -100,33 +122,37 @@ bool events::out::generictext(std::string packet) {
                 }
             }
             return true;
-        } else if (find_command(chat, "warp ")) {
+        }
+        else if (find_command(chat, "warp ")) {
             std::string name = chat.substr(6);
             gt::send_log("`7Warping to " + name);
             g_server->send(false, "action|join_request\nname|" + name, 3);
             return true;
-           } else if (find_command(chat, "pullall")) {
+        }
+        else if (find_command(chat, "pullall")) {
             std::string username = chat.substr(6);
             for (auto& player : g_server->m_world.players) {
                 auto name_2 = player.name.substr(2); //remove color
                 if (name_2.find(username)) {
                     g_server->send(false, "action|wrench\n|netid|" + std::to_string(player.netid));
                     Sleep(5);
-                    g_server->send(false, "action|dialog_return\ndialog_name|popup\nnetID|" + std::to_string(player.netid) + "|\nbuttonClicked|pull"); 
+                    g_server->send(false, "action|dialog_return\ndialog_name|popup\nnetID|" + std::to_string(player.netid) + "|\nbuttonClicked|pull");
                     // You Can |kick |trade |worldban 
                     Sleep(5);
                     gt::send_log("Pulled");
-                  
+
                 }
             }
             return true;
-        } else if (find_command(chat, "skin ")) {
+        }
+        else if (find_command(chat, "skin ")) {
             int skin = atoi(chat.substr(6).c_str());
             variantlist_t va{ "OnChangeSkin" };
             va[1] = skin;
             g_server->send(true, va, world.local.netid, -1);
             return true;
-        } else if (find_command(chat, "kill ")) {
+        }
+        else if (find_command(chat, "kill ")) {
             std::string username = chat.substr(6);
             for (auto& player : g_server->m_world.players) {
                 auto name_2 = player.name.substr(2); //remove color
@@ -146,21 +172,24 @@ bool events::out::generictext(std::string packet) {
                 }
             }
             return true;
-        } else if (find_command(chat, "wrench ")) {
+        }
+        else if (find_command(chat, "wrench ")) {
             std::string name = chat.substr(6);
             std::string username = ".";
             for (auto& player : g_server->m_world.players) {
                 auto name_2 = player.name.substr(2);
                 std::transform(name_2.begin(), name_2.end(), name_2.begin(), ::tolower);
-                    g_server->send(false, "action|wrench\n|netid|" + std::to_string(player.netid));
+                g_server->send(false, "action|wrench\n|netid|" + std::to_string(player.netid));
             }
             return true;
-        } else if (find_command(chat, "proxy")) {
+        }
+        else if (find_command(chat, "proxy")) {
             gt::send_log(
                 "/legal (recovers surgery), /tp [name] (teleports to a player in the world), /ghost (toggles ghost, you wont move for others when its enabled), /uid "
                 "[name] (resolves name to uid), /flag [id] (sets flag to item id), /name [name] (sets name to name)");
             return true;
-        } else if (find_command(chat, "legal")) {
+        }
+        else if (find_command(chat, "legal")) {
             gt::send_log("using legal briefs");
             gameupdatepacket_t packet{};
             packet.m_type = PACKET_ITEM_ACTIVATE_REQUEST;
@@ -251,125 +280,152 @@ bool events::in::variantlist(gameupdatepacket_t* packet) {
 
     switch (hs::hash32(func.c_str())) {
         //solve captcha
-        case fnv32("onShowCaptcha"): {
-            auto menu = varlist[1].get_string();
-            gt::solve_captcha(menu);
-            return true;
-        } break;
-        case fnv32("OnRequestWorldSelectMenu"): {
-            auto& world = g_server->m_world;
-            world.players.clear();
-            world.local = {};
-            world.connected = false;
-            world.name = "EXIT";
-        } break;
-        case fnv32("OnSendToServer"): g_server->redirect_server(varlist); return true;
+    case fnv32("onShowCaptcha"): {
+        auto menu = varlist[1].get_string();
+        gt::solve_captcha(menu);
+        return true;
+    } break;
+    case fnv32("OnRequestWorldSelectMenu"): {
+        auto& world = g_server->m_world;
+        world.players.clear();
+        world.local = {};
+        world.connected = false;
+        world.name = "EXIT";
+    } break;
+    case fnv32("OnSendToServer"): g_server->redirect_server(varlist); return true;
 
-        case fnv32("OnConsoleMessage"): {
-            varlist[1] = "`4[PROXY]`` " + varlist[1].get_string();
-            g_server->send(true, varlist);
-            return true;
-        } break;
-        case fnv32("OnDialogRequest"): {
-            auto content = varlist[1].get_string();
+    case fnv32("OnConsoleMessage"): {
+        varlist[1] = "`4[PROXY]`` " + varlist[1].get_string();
+        g_server->send(true, varlist);
+        return true;
+    } break;
+    case fnv32("OnDialogRequest"): {
+        auto content = varlist[1].get_string();
 
-            if (content.find("set_default_color|`o") != -1) 
+        if (content.find("set_default_color|`o") != -1)
+        {
+            if (content.find("end_dialog|captcha_submit||Submit|") != -1)
             {
-                if (content.find("end_dialog|captcha_submit||Submit|") != -1) 
-                {
-                    gt::solve_captcha(content);
+                gt::solve_captcha(content);
+                return true;
+            }
+        }
+        if (fastdrop == true) {
+            std::string itemid = content.substr(content.find("embed_data|itemID|") + 18, content.length() - content.find("embed_data|itemID|") - 1);
+            std::string count = content.substr(content.find("count||") + 7, content.length() - content.find("count||") - 1);
+            if (content.find("embed_data|itemID|") != -1) {
+                if (content.find("Drop") != -1) {
+                    g_server->send(false, "action|dialog_return\ndialog_name|drop_item\nitemID|" + itemid + "|\ncount|" + count);
                     return true;
                 }
             }
-            //hide unneeded ui when resolving
-            //for the /uid command
-            if (gt::resolving_uid2 && (content.find("friend_all|Show offline") != -1 || content.find("Social Portal") != -1) ||
-                content.find("Are you sure you wish to stop ignoring") != -1) {
-                return true;
-            } else if (gt::resolving_uid2 && content.find("Ok, you will now be able to see chat") != -1) {
+        }
+        if (fasttrash == true) {
+            std::string itemid = content.substr(content.find("embed_data|itemID|") + 18, content.length() - content.find("embed_data|itemID|") - 1);
+            std::string count = content.substr(content.find("you have ") + 9, content.length() - content.find("you have ") - 1);
+            std::string delimiter = ")";
+            std::string token = count.substr(0, count.find(delimiter));
+            if (content.find("embed_data|itemID|") != -1) {
+                if (content.find("Trash") != -1) {
+                    g_server->send(false, "action|dialog_return\ndialog_name|trash_item\nitemID|" + itemid + "|\ncount|" + token);
+                    return true;
+                }
+            }
+        }
+        //hide unneeded ui when resolving
+        //for the /uid command
+        if (gt::resolving_uid2 && (content.find("friend_all|Show offline") != -1 || content.find("Social Portal") != -1) ||
+            content.find("Are you sure you wish to stop ignoring") != -1) {
+            return true;
+        }
+        else if (gt::resolving_uid2 && content.find("Ok, you will now be able to see chat") != -1) {
+            gt::resolving_uid2 = false;
+            return true;
+        }
+        else if (gt::resolving_uid2 && content.find("`4Stop ignoring") != -1) {
+            int pos = content.rfind("|`4Stop ignoring");
+            auto ignore_substring = content.substr(0, pos);
+            auto uid = ignore_substring.substr(ignore_substring.rfind("add_button|") + 11);
+            auto uid_int = atoi(uid.c_str());
+            if (uid_int == 0) {
                 gt::resolving_uid2 = false;
-                return true;
-            } else if (gt::resolving_uid2 && content.find("`4Stop ignoring") != -1) {
-                int pos = content.rfind("|`4Stop ignoring");
-                auto ignore_substring = content.substr(0, pos);
-                auto uid = ignore_substring.substr(ignore_substring.rfind("add_button|") + 11);
-                auto uid_int = atoi(uid.c_str());
-                if (uid_int == 0) {
-                    gt::resolving_uid2 = false;
-                    gt::send_log("name resolving seems to have failed.");
-                } else {
-                    gt::send_log("Target UID: " + uid);
-                    g_server->send(false, "action|dialog_return\ndialog_name|friends\nbuttonClicked|" + uid);
-                    g_server->send(false, "action|dialog_return\ndialog_name|friends_remove\nfriendID|" + uid + "|\nbuttonClicked|remove");
-                }
-                return true;
-            } else if (content.find("add_button|report_player|`wReport Player``|noflags|0|0|") != -1) {
-                content = content.insert(content.find("add_button|report_player|`wReport Player``|noflags|0|0|"), "\nadd_button|surgery|`4Kill player``|noflags|0|0|\n");
-                varlist[1] = content;
-                g_server->send(true, varlist, -1, -1);
-                return true;
+                gt::send_log("name resolving seems to have failed.");
             }
-        } break;
-        case fnv32("OnRemove"): {
-            auto text = varlist.get(1).get_string();
-            if (text.find("netID|") == 0) {
-                auto netid = atoi(text.substr(6).c_str());
+            else {
+                gt::send_log("Target UID: " + uid);
+                g_server->send(false, "action|dialog_return\ndialog_name|friends\nbuttonClicked|" + uid);
+                g_server->send(false, "action|dialog_return\ndialog_name|friends_remove\nfriendID|" + uid + "|\nbuttonClicked|remove");
+            }
+            return true;
+        }
+        else if (content.find("add_button|report_player|`wReport Player``|noflags|0|0|") != -1) {
+            content = content.insert(content.find("add_button|report_player|`wReport Player``|noflags|0|0|"), "\nadd_button|surgery|`4Kill player``|noflags|0|0|\n");
+            varlist[1] = content;
+            g_server->send(true, varlist, -1, -1);
+            return true;
+        }
+    } break;
+    case fnv32("OnRemove"): {
+        auto text = varlist.get(1).get_string();
+        if (text.find("netID|") == 0) {
+            auto netid = atoi(text.substr(6).c_str());
 
-                if (netid == g_server->m_world.local.netid)
-                    g_server->m_world.local = {};
+            if (netid == g_server->m_world.local.netid)
+                g_server->m_world.local = {};
 
-                auto& players = g_server->m_world.players;
-                for (size_t i = 0; i < players.size(); i++) {
-                    auto& player = players[i];
-                    if (player.netid == netid) {
-                        players.erase(std::remove(players.begin(), players.end(), player), players.end());
-                        break;
-                    }
+            auto& players = g_server->m_world.players;
+            for (size_t i = 0; i < players.size(); i++) {
+                auto& player = players[i];
+                if (player.netid == netid) {
+                    players.erase(std::remove(players.begin(), players.end(), player), players.end());
+                    break;
                 }
             }
-        } break;
-        case fnv32("OnSpawn"): {
-            std::string meme = varlist.get(1).get_string();
-            rtvar var = rtvar::parse(meme);
-            auto name = var.find("name");
-            auto netid = var.find("netID");
-            auto onlineid = var.find("onlineID");
+        }
+    } break;
+    case fnv32("OnSpawn"): {
+        std::string meme = varlist.get(1).get_string();
+        rtvar var = rtvar::parse(meme);
+        auto name = var.find("name");
+        auto netid = var.find("netID");
+        auto onlineid = var.find("onlineID");
 
-            if (name && netid && onlineid) {
-                player ply{};
+        if (name && netid && onlineid) {
+            player ply{};
 
-                if (var.find("invis")->m_value != "1") {
-                    ply.name = name->m_value;
-                    ply.country = var.get("country");
-                    name->m_values[0] += " `4[" + netid->m_value + "]``";
-                    auto pos = var.find("posXY");
-                    if (pos && pos->m_values.size() >= 2) {
-                        auto x = atoi(pos->m_values[0].c_str());
-                        auto y = atoi(pos->m_values[1].c_str());
-                        ply.pos = vector2_t{ float(x), float(y) };
-                    }
-                } else {
-                    ply.mod = true;
-                    ply.invis = true;
+            if (var.find("invis")->m_value != "1") {
+                ply.name = name->m_value;
+                ply.country = var.get("country");
+                name->m_values[0] += " `4[" + netid->m_value + "]``";
+                auto pos = var.find("posXY");
+                if (pos && pos->m_values.size() >= 2) {
+                    auto x = atoi(pos->m_values[0].c_str());
+                    auto y = atoi(pos->m_values[1].c_str());
+                    ply.pos = vector2_t{ float(x), float(y) };
                 }
-                if (var.get("mstate") == "1" || var.get("smstate") == "1")
-                    ply.mod = true;
-                ply.userid = var.get_int("userID");
-                ply.netid = var.get_int("netID");
-                if (meme.find("type|local") != -1) {
-                    //set mod state to 1 (allows infinite zooming, this doesnt ban cuz its only the zoom not the actual long punch)
-                    var.find("mstate")->m_values[0] = "1";
-                    g_server->m_world.local = ply;
-                }
-                g_server->m_world.players.push_back(ply);
-                auto str = var.serialize();
-                utils::replace(str, "onlineID", "onlineID|");
-                varlist[1] = str;
-                PRINTC("new: %s\n", varlist.print().c_str());
-                g_server->send(true, varlist, -1, -1);
-                return true;
             }
-        } break;
+            else {
+                ply.mod = true;
+                ply.invis = true;
+            }
+            if (var.get("mstate") == "1" || var.get("smstate") == "1")
+                ply.mod = true;
+            ply.userid = var.get_int("userID");
+            ply.netid = var.get_int("netID");
+            if (meme.find("type|local") != -1) {
+                //set mod state to 1 (allows infinite zooming, this doesnt ban cuz its only the zoom not the actual long punch)
+                var.find("mstate")->m_values[0] = "1";
+                g_server->m_world.local = ply;
+            }
+            g_server->m_world.players.push_back(ply);
+            auto str = var.serialize();
+            utils::replace(str, "onlineID", "onlineID|");
+            varlist[1] = str;
+            PRINTC("new: %s\n", varlist.print().c_str());
+            g_server->send(true, varlist, -1, -1);
+            return true;
+        }
+    } break;
     }
     return false;
 }
@@ -386,10 +442,12 @@ bool events::in::gamemessage(std::string packet) {
         if (packet.find("PERSON IGNORED") != -1) {
             g_server->send(false, "action|dialog_return\ndialog_name|friends_guilds\nbuttonClicked|showfriend");
             g_server->send(false, "action|dialog_return\ndialog_name|friends\nbuttonClicked|friend_all");
-        } else if (packet.find("Nobody is currently online with the name") != -1) {
+        }
+        else if (packet.find("Nobody is currently online with the name") != -1) {
             gt::resolving_uid2 = false;
             gt::send_log("Target is offline, cant find uid.");
-        } else if (packet.find("Clever perhaps") != -1) {
+        }
+        else if (packet.find("Clever perhaps") != -1) {
             gt::resolving_uid2 = false;
             gt::send_log("Target is a moderator, can't ignore them.");
         }
