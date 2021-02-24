@@ -62,7 +62,7 @@ bool events::out::generictext(std::string packet) {
                 if (mode == "pull") {
                     g_server->send(false, "action|dialog_return\ndialog_name|popup\nnetID|" + motion + "|\nnetID|" + motion + "|\nbuttonClicked|kick");
                 }
-                if (mode == "`ban") {
+                if (mode == "ban") {
                     g_server->send(false, "action|dialog_return\ndialog_name|popup\nnetID|" + motion + "|\nnetID|" + motion + "|\nbuttonClicked|worldban");
                 }
                 return true;
